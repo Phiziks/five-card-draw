@@ -1,45 +1,44 @@
 package com.ishmael.fivecarddraw.services;
 
+import com.ishmael.fivecarddraw.dto.Card;
+import com.ishmael.fivecarddraw.dto.Deck;
 import com.ishmael.fivecarddraw.dto.Draw;
 import com.ishmael.fivecarddraw.interfaces.DrawService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @Slf4j
 public class DrawServiceImp implements DrawService {
 
-    private final RestTemplate restTemplate;
-
-    public DrawServiceImp(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
-
     @Override
-    public Optional<Draw> drawCards(String deckId, String cardCount) {
+    public Draw drawCards(Deck deck, int cardCount) {
 
-        Map<String, String> params = new HashMap<>();
-        params.put("deck_id", deckId);
-        params.put("count", cardCount);
+        List<Card> drawnCards = new ArrayList<>();
 
+        List<Card> cards = deck.getCards();
 
-        Draw draw = restTemplate.getForObject(buildRetrieveDeckUrl(deckId, cardCount), Draw.class, params);
+        for (int i = 0; i < cardCount; i++) {
+            Card card = cards.get(getRandomCard(cards.size()));
+            drawnCards.add(card);
+            cards.remove(card);
 
-        if (draw == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(draw);
         }
+
+        deck.setRemaining(cards.size());
+        Draw draw = new Draw();
+        draw.setCards(drawnCards);
+        draw.setDeck(deck);
+        draw.setRemaining(cards.size());
+        return draw;
+
     }
 
-
-    private String buildRetrieveDeckUrl(String deckId, String cardCount) {
-        return String.format("https://www.deckofcardsapi.com/api/deck/%s/draw/?count=%s", deckId, cardCount);
+    int getRandomCard(int max) {
+        return ThreadLocalRandom.current().nextInt(0, max)+1;
     }
-
 }

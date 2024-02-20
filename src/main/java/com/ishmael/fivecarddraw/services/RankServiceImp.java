@@ -4,7 +4,6 @@ import com.ishmael.fivecarddraw.dto.Card;
 import com.ishmael.fivecarddraw.interfaces.RankService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -12,12 +11,10 @@ import java.util.List;
 @Slf4j
 public class RankServiceImp implements RankService {
 
-    private final RestTemplate restTemplate;
 
     private final PokerHand pokerHand;
 
-    public RankServiceImp(RestTemplate restTemplate, PokerHand pokerhand) {
-        this.restTemplate = restTemplate;
+    public RankServiceImp(PokerHand pokerhand) {
         this.pokerHand = pokerhand;
 
     }
@@ -26,25 +23,17 @@ public class RankServiceImp implements RankService {
     public String rank(List<Card> cards) {
         StringBuilder s = new StringBuilder();
         for (Card card : cards) {
-            s.append(formatCards(card.getValue())).append(card.getSuit().charAt(0)).append(" ");
+            s.append(formatCards(card.getValue().toString())).append(card.getSuit().toString()).append(" ");
         }
 
         pokerHand.setPokerHand(s.toString());
-        return "your hand is:" + pokerHand.rankCards();
+        return pokerHand.rankCards();
     }
 
-    String formatCards(String card) {
+    private String formatCards(String card) {
 
         if (card.equals("10")) {
             return "T";
-        } else if (card.equalsIgnoreCase("ACE")) {
-            return "A";
-        }else if (card.equalsIgnoreCase("QUEEN")){
-            return "Q";
-        }else if (card.equalsIgnoreCase("KING")){
-            return "K";
-        }else if (card.equalsIgnoreCase("JACK")){
-            return "J";
         }
         return card;
     }

@@ -1,49 +1,56 @@
 package com.ishmael.fivecarddraw.services;
 
+import com.ishmael.fivecarddraw.enums.Suit;
+import com.ishmael.fivecarddraw.enums.Value;
+import com.ishmael.fivecarddraw.dto.Card;
 import com.ishmael.fivecarddraw.dto.Deck;
-import com.ishmael.fivecarddraw.dto.RetrieveDeckRequest;
 import com.ishmael.fivecarddraw.interfaces.DeckService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
+import java.util.List;
 
 @Service
 @Slf4j
 public class DeckServiceImp implements DeckService {
 
-    private final RestTemplate restTemplate;
-
-    public DeckServiceImp(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
 
     @Override
-    public Optional<Deck> retrieveDeck(RetrieveDeckRequest retrieveDeckRequest) {
+    public Deck createNewDeck(int deckCount, boolean shuffle) {
 
-        Map<String, String> params = Collections.singletonMap("count", String.valueOf(retrieveDeckRequest.getCount()));
-        Deck deck = restTemplate.getForObject(buildRetrieveDeckUrl(), Deck.class, params);
+        Deck deck = new Deck();
 
+        List<Card> cardDeck = new ArrayList<>();
 
-        if (deck == null) {
-            return Optional.empty();
-        } else {
+        //for each deck count, create 52 cards, based on the suit and values
+        for (int i = 0; i < deckCount; i++) {
 
-            return Optional.of(deck);
+            //create a single deck of 52 cards
+            for (Suit suit : Suit.values()) {
+                for (Value face : Value.values()) {
+                    Card card = new Card(face, suit);
+                    cardDeck.add(card);
+                }
+            }
         }
 
-    }
+        deck.setCards(cardDeck);
+        deck.setRemaining(cardDeck.size());
 
+        if (shuffle) {
+            this.shuffleDeck(deck);
+        }
+
+        return deck;
+
+    }
 
     @Override
-    public Deck shuffleDeck(String deckId) {
-        return null;
+    public void shuffleDeck(Deck deck) {
+        Collections.shuffle(deck.getCards());
+        deck.setShuffled(true);
     }
 
-    private String buildRetrieveDeckUrl() {
-        return "https://www.deckofcardsapi.com/api/deck/new/shuffle";
-    }
 }
